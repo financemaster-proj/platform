@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finance Master Board</title>
+<style>
+  :root {
+    --bg: #f6f7f9;       --surface: #ffffff;   --surface-2: #f0f2f5;
+    --text: #15181d;     --muted: #646b78;     --border: #dfe3e9;
+    --accent: #2f6feb;   --ok: #1a7f4b;        --warn: #b45309;
+    --danger: #b42318;   --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.05);
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216;     --surface: #171b21;   --surface-2: #1e242c;
+      --text: #e6e9ee;   --muted: #98a1b0;     --border: #2a313b;
+      --accent: #5b92f5; --ok: #3ec07a;        --warn: #e0a33a;
+      --danger: #f0756a; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 16px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+  .spacer { flex: 1; }
+  .totals { color: var(--muted); font-size: 13px; }
+  .totals b { color: var(--text); }
+  select, button, input[type=text], input[type=number], textarea {
+    font: inherit; color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  main {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(232px, 1fr);
+    gap: 12px; padding: 16px; overflow-x: auto; align-items: start;
+  }
+  .col { background: var(--surface); border: 1px solid var(--border);
+         border-radius: var(--radius); min-height: 120px; }
+  .col.drag { border-color: var(--accent); background: var(--surface-2); }
+  .col > h2 {
+    margin: 0; padding: 10px 12px; font-size: 12px; font-weight: 650;
+    text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+    border-bottom: 1px solid var(--border); display: flex; gap: 8px;
+  }
+  .col > h2 .n { color: var(--text); }
+  .col .items { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+  .card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 8px; padding: 9px 10px; cursor: pointer;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .card .id { font-size: 11px; color: var(--muted); letter-spacing: .03em; }
+  .card .t { margin: 2px 0 7px; font-weight: 500; }
+  .card .meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .card[data-type=story] { border-left-color: var(--accent); }
+  .card[data-type=task]  { border-left-color: var(--muted); }
+  .card[data-type=spike] { border-left-color: var(--warn); }
+  .card[data-type=bug]   { border-left-color: var(--danger); }
+
+  .badge {
+    font-size: 11px; padding: 1px 6px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted); background: var(--surface);
+  }
+  .badge.pts { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
+
+  aside {
+    position: fixed; top: 0; right: 0; width: min(520px, 100%); height: 100%;
+    background: var(--surface); border-left: 1px solid var(--border);
+    box-shadow: var(--shadow); overflow-y: auto; padding: 16px;
+    transform: translateX(100%); transition: transform .16s ease; z-index: 20;
+  }
+  aside.open { transform: none; }
+  aside h2 { margin: 0 0 2px; font-size: 16px; }
+  aside .sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .fields { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center;
+            padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .fields label { color: var(--muted); font-size: 12px; }
+  .body h4 { margin: 18px 0 6px; font-size: 13px; text-transform: uppercase;
+             letter-spacing: .05em; color: var(--muted); }
+  .body h5 { margin: 14px 0 4px; font-size: 13px; }
+  .body ul { margin: 6px 0; padding-left: 20px; }
+  .body ul.checks { list-style: none; padding-left: 0; }
+  .body ul.checks li { margin: 3px 0; }
+  .body ul.checks label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+  .body ul.checks input { margin-top: 4px; flex: none; }
+  .body code { background: var(--surface-2); padding: 1px 4px; border-radius: 4px; font-size: 12.5px; }
+  .body p { margin: 8px 0; }
+  .body a { color: var(--accent); }
+  textarea { width: 100%; min-height: 88px; resize: vertical; }
+  .close { position: absolute; top: 12px; right: 12px; }
+  #toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 70px);
+    background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 999px;
+    font-size: 13px; opacity: 0; transition: all .2s ease; z-index: 50; pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.err { background: var(--danger); color: #fff; }
+  .err-note { color: var(--danger); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Finance Master</h1>
+  <label class="totals">Sprint
+    <select id="sprint"></select>
+  </label>
+  <span class="totals" id="totals"></span>
+  <span class="spacer"></span>
+  <button id="refresh">Refresh</button>
+</header>
+
+<main id="board"></main>
+
+<aside id="drawer"><button class="close" id="close">Close</button><div id="detail"></div></aside>
+<div id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const state = { tickets: [], statuses: [], types: [], epics: [], sprint: "all", sel: null };
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function toast(msg, isErr) {
+  const el = $("#toast");
+  el.textContent = msg;
+  el.className = "show" + (isErr ? " err" : "");
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => (el.className = ""), isErr ? 4000 : 1400);
+}
+
+async function load() {
+  try {
+    const res = await fetch("/api/tickets");
+    const data = await res.json();
+    Object.assign(state, data);
+    buildSprintFilter();
+    render();
+  } catch (e) { toast("cannot reach server - is serve.py running?", true); }
+}
+
+async function patch(id, payload) {
+  const res = await fetch("/api/tickets/" + encodeURIComponent(id), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) { toast(data.error || "save failed", true); return false; }
+  const i = state.tickets.findIndex(t => t.id === id);
+  if (i !== -1) state.tickets[i] = data.ticket;
+  toast("saved");
+  render();
+  return true;
+}
+
+function visible() {
+  return state.sprint === "all"
+    ? state.tickets
+    : state.tickets.filter(t => (t.sprint || "-") === state.sprint);
+}
+
+const pts = t => parseInt(t.points, 10) || 0;
+
+function buildSprintFilter() {
+  const sel = $("#sprint");
+  const sprints = [...new Set(state.tickets.map(t => t.sprint || "-"))].sort();
+  sel.innerHTML = '<option value="all">all</option>' +
+    sprints.map(s => `<option value="${esc(s)}">${s === "-" ? "unscheduled" : s}</option>`).join("");
+  sel.value = state.sprint;
+}
+
+function render() {
+  const rows = visible();
+  const total = rows.reduce((a, t) => a + pts(t), 0);
+  const done = rows.filter(t => t.status === "done").reduce((a, t) => a + pts(t), 0);
+  $("#totals").innerHTML =
+    `<b>${rows.length}</b> tickets &middot; <b>${done}</b>/<b>${total}</b> pts done`;
+
+  $("#board").innerHTML = state.statuses.map(status => {
+    const items = rows.filter(t => t.status === status);
+    const p = items.reduce((a, t) => a + pts(t), 0);
+    return `<section class="col" data-status="${status}">
+      <h2>${status}<span class="n">${items.length}</span><span class="spacer"></span><span class="n">${p}</span></h2>
+      <div class="items">${items.map(card).join("")}</div>
+    </section>`;
+  }).join("");
+
+  if (state.sel) renderDetail();
+}
+
+function card(t) {
+  return `<article class="card ${state.sel === t.id ? "sel" : ""}" draggable="true"
+            data-id="${esc(t.id)}" data-type="${esc(t.type)}">
+    <div class="id mono">${esc(t.id)}</div>
+    <div class="t">${esc(t.title)}</div>
+    <div class="meta">
+      <span class="badge">${esc(t.type)}</span>
+      <span class="badge">${esc(t.epic)}</span>
+      <span class="spacer"></span>
+      <span class="badge pts">${esc(t.points)}</span>
+    </div>
+  </article>`;
+}
+
+function mdToHtml(md) {
+  let cb = -1, out = "", list = null;
+  const inline = s => esc(s)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  let para = [];
+  const closeList = () => { if (list) { out += `</ul>`; list = null; } };
+  // markdown soft-wraps: consecutive plain lines are one paragraph, not several.
+  const flushPara = () => {
+    if (para.length) { out += `<p>${inline(para.join(" "))}</p>`; para = []; }
+  };
+
+  for (const raw of String(md || "").split("\n")) {
+    const line = raw.trimEnd();
+    const check = line.match(/^\s*[-*]\s+\[([ xX])\]\s+(.*)$/);
+    if (check) {
+      cb++;
+      flushPara();
+      if (list !== "checks") { closeList(); out += '<ul class="checks">'; list = "checks"; }
+      out += `<li><label><input type="checkbox" data-cb="${cb}"
+        ${check[1].toLowerCase() === "x" ? "checked" : ""}><span>${inline(check[2])}</span></label></li>`;
+      continue;
+    }
+    const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+    if (bullet) {
+      flushPara();
+      if (list !== "plain") { closeList(); out += "<ul>"; list = "plain"; }
+      out += `<li>${inline(bullet[1])}</li>`;
+      continue;
+    }
+    const h = line.match(/^(#{2,5})\s+(.*)$/);
+    if (h) {
+      flushPara(); closeList();
+      out += `<h${Math.min(h[1].length + 2, 5)}>${inline(h[2])}</h${Math.min(h[1].length + 2, 5)}>`;
+      continue;
+    }
+    if (!line.trim()) { flushPara(); closeList(); continue; }
+    closeList();
+    para.push(line.trim());
+  }
+  flushPara();
+  closeList();
+  return out;
+}
+
+function renderDetail() {
+  const t = state.tickets.find(x => x.id === state.sel);
+  if (!t) return;
+  const opts = (list, val) => list.map(o =>
+    `<option value="${esc(o)}" ${o === val ? "selected" : ""}>${esc(o)}</option>`).join("");
+  const notes = (t.body || "").split("## Notes")[1]?.trim() || "";
+
+  $("#detail").innerHTML = `
+    <h2>${esc(t.title)}</h2>
+    <div class="sub mono">${esc(t.id)} &middot; created ${esc(t.created || "-")}</div>
+    ${t._error ? `<p class="err-note">${esc(t._error)}</p>` : ""}
+    <div class="fields">
+      <label>status</label>  <select data-f="status">${opts(state.statuses, t.status)}</select>
+      <label>type</label>    <select data-f="type">${opts(state.types, t.type)}</select>
+      <label>epic</label>    <select data-f="epic">${opts(state.epics, t.epic)}</select>
+      <label>points</label>  <input type="text" data-f="points" value="${esc(t.points)}">
+      <label>sprint</label>  <input type="text" data-f="sprint" value="${esc(t.sprint)}">
+      <label>service</label> <input type="text" data-f="service" value="${esc(t.service)}">
+    </div>
+    <div class="body">${mdToHtml((t.body || "").split("## Notes")[0])}</div>
+    <h4>Notes</h4>
+    <textarea id="notes" placeholder="Dead ends, decisions, things to remember...">${esc(notes)}</textarea>
+    <p><button class="primary" id="saveNotes">Save notes</button></p>`;
+
+  $("#drawer").classList.add("open");
+
+  $("#detail").querySelectorAll("[data-f]").forEach(el => {
+    const commit = () => patch(t.id, { fields: { [el.dataset.f]: el.value } });
+    el.addEventListener(el.tagName === "SELECT" ? "change" : "blur", commit);
+  });
+  $("#detail").querySelectorAll("input[data-cb]").forEach(el =>
+    el.addEventListener("change", () => patch(t.id, { toggle: +el.dataset.cb })));
+  $("#saveNotes").addEventListener("click", () =>
+    patch(t.id, { notes: $("#notes").value }));
+}
+
+// ---- events
+$("#board").addEventListener("click", e => {
+  const el = e.target.closest(".card");
+  if (!el) return;
+  state.sel = el.dataset.id;
+  render();
+});
+$("#close").addEventListener("click", () => {
+  state.sel = null; $("#drawer").classList.remove("open"); render();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") $("#close").click();
+});
+$("#sprint").addEventListener("change", e => { state.sprint = e.target.value; render(); });
+$("#refresh").addEventListener("click", load);
+
+let dragId = null;
+$("#board").addEventListener("dragstart", e => {
+  const el = e.target.closest(".card");
+  if (el) { dragId = el.dataset.id; e.dataTransfer.effectAllowed = "move"; }
+});
+$("#board").addEventListener("dragover", e => {
+  const col = e.target.closest(".col");
+  if (!col || !dragId) return;
+  e.preventDefault();
+  document.querySelectorAll(".col.drag").forEach(c => c.classList.remove("drag"));
+  col.classList.add("drag");
+});
+$("#board").addEventListener("drop", e => {
+  const col = e.target.closest(".col");
+  document.querySelectorAll(".col.drag").forEach(c => c.classList.remove("drag"));
+  if (!col || !dragId) return;
+  e.preventDefault();
+  const t = state.tickets.find(x => x.id === dragId);
+  if (t && t.status !== col.dataset.status) patch(dragId, { fields: { status: col.dataset.status } });
+  dragId = null;
+});
+
+load();
+</script>
+</body>
+</html>
