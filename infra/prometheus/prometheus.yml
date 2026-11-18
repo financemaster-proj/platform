@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Services run on the HOST, not in this network, so Prometheus reaches them
+  # through the docker bridge gateway rather than a container name.
+  - job_name: finance-master-services
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - "host.docker.internal:8080"  # api-gateway
+          - "host.docker.internal:8081"  # auth-service
+          - "host.docker.internal:8082"  # expense-service
+          - "host.docker.internal:8083"  # investment-service
+          - "host.docker.internal:8084"  # analytics-service
