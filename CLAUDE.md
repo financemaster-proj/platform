@@ -11,6 +11,11 @@ does not. The **service** is `auth-service`; its **repo** is
 ## Working agreement — important
 
 - **Claude plans. Nithish codes.**
+- **Commits: `platform` is Claude's, the service repos are Nithish's.**
+  Claude commits and pushes in `platform` (docs, ADRs, tracker - its own work).
+  Claude **never** commits or pushes in any `*-backend` repo; it leaves changes
+  in the working tree and says what changed and why, so Nithish can write the
+  commit message from it.
 - Claude writes tickets, estimates, docs, ADRs, and reviews code like a senior engineer would.
 - Claude does **not** write production code unless explicitly asked for a specific snippet.
 - Tracker and project tooling (`platform/tracker/`) are Claude's to maintain.
