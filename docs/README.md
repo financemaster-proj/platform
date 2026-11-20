@@ -11,6 +11,7 @@ properly. Java 21, Spring Boot, four services, Kafka, Postgres.
 | [Decision records](adr/README.md) | Every significant decision and why |
 | [Definition of Done](definition-of-done.md) | What "finished" means on this project |
 | [Roadmap](sprints/README.md) | Ten sprints, and the concept each one teaches |
+| [Expense domain](domain/expense.md) | Aggregates, invariants and the decisions behind sprint 3 |
 | [Board](../tracker/BOARD.md) | Current tickets |
 | [Tracker conventions](../tracker/README.md) | Ticket format and workflow |
 

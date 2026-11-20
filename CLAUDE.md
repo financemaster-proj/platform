@@ -55,8 +55,8 @@ Branches: `feature/FM-012-short-slug`. Commits start with the ticket id.
 
 ## Open decisions
 
-- **ADR-0008** — domain/persistence separation: strict in `expense-service`,
-  pragmatic in `auth-service`? Proposed, not yet confirmed.
+- **ADR-0008** — **decided 2026-11-20: pragmatic in every service** — the JPA
+  entity is the domain object. ADR-0008 still says Proposed; FM-011 updates it.
 - **Investment market scope** — Indian equities and mutual funds in INR, or US
   equities? Determines the market data provider and the whole investment domain
   model (NAV-based MF units, SIPs and corporate actions vs simple ticker prices).
